@@ -33,7 +33,9 @@ def create_json_schema(properties: list[str],
                        defaults: dict[str, Any] | None = None,
                        descriptions: dict[str, str]| None = None,
                        title: str | None = None,
-                       pull_descriptions: bool = False) -> dict:
+                       additional_properties: bool = False,
+                       pull_descriptions: bool = False,
+                       pull_required: bool = False) -> dict:
 ```
 
 The only thing required to create a JSON schema using the ```create_json_schema``` function is a list of properties.

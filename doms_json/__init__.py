@@ -79,12 +79,14 @@ def to_direct_json_schema_type(t: type) -> str | None:
 
 # Converts a type, tuple of types, or list of types into a JSON Schema type
 # str -> {"type": "string"}
-def to_json_schema_type(t: type | tuple[type] | list[type], pull_descriptions: bool = False) -> JSONSchemaType:
+def to_json_schema_type(t: type | tuple[type] | list[type], additional_properties: bool = False, pull_descriptions: bool = False, pull_required: bool = False) -> JSONSchemaType:
     """
     Convert a type into a JSON Schema Type object
 
     :param t: The type
+    :param additional_properties: Optional. Whether or not to all additional properties.
     :param pull_descriptions: Optional. Whether or not to pull descriptions if the function ends up generating a JSON Schema from an object
+    :param pull_required: Option. Whether or not to mark a property required if it isn't a Union with NoneType. Ex. str -> Not required, str | None -> Required
 
     Examples:
 
@@ -108,11 +110,11 @@ def to_json_schema_type(t: type | tuple[type] | list[type], pull_descriptions: b
             required = True
             tl.remove(NoneType)
             if len(tl) == 1:
-                schema_type: JSONSchemaType = to_json_schema_type(tl[0], pull_descriptions)
+                schema_type: JSONSchemaType = to_json_schema_type(tl[0], additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required)
                 schema_type.required = False
                 return schema_type
         return JSONSchemaType({
-            "anyOf": [to_json_schema_type(ty, pull_descriptions) for ty in tl]
+            "anyOf": [to_json_schema_type(ty, additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required) for ty in tl]
         }, required)
     # First, attempt to get a basic string type
     # str -> "string"
@@ -130,7 +132,7 @@ def to_json_schema_type(t: type | tuple[type] | list[type], pull_descriptions: b
         # If it is, convert its specified types to JSON Schema types and return the final JSON Schema type 
         return JSONSchemaType({
             "type": "array",
-            "items": to_json_schema_type(arguments, pull_descriptions).schema_type
+            "items": to_json_schema_type(arguments, additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required).schema_type
         }, True)
     # Otherwise, check if it's a Union, ex: str | int
     if origin == UnionType:
@@ -146,7 +148,7 @@ def to_json_schema_type(t: type | tuple[type] | list[type], pull_descriptions: b
         # If it can, then it is a tuple or list
         # If the length is one, just use the first type
         if length == 1:
-            return to_json_schema_type(t[0], pull_descriptions)
+            return to_json_schema_type(t[0], additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required)
         # If the length is zero, return {}
         elif length == 0:
             return JSONSchemaType({})
@@ -154,7 +156,7 @@ def to_json_schema_type(t: type | tuple[type] | list[type], pull_descriptions: b
         else:
             return __many__(t)
     # Otherwise, it must be an object
-    return JSONSchemaType(generate_json_schema(t, pull_descriptions), True)
+    return JSONSchemaType(generate_json_schema(t, additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required), True)
 
 
 # Mold a value into a type
@@ -236,6 +238,7 @@ def create_json_schema(properties: list[str],
                        descriptions: dict[str, str]| None = None,
                        required: list[str] | None = None,
                        title: str | None = None,
+                       additional_properties: bool = False,
                        pull_descriptions: bool = False,
                        pull_required: bool = False) -> dict:
     """
@@ -246,6 +249,7 @@ def create_json_schema(properties: list[str],
     :param defaults: Optional. Defaults for any variables. Ex: {"mystring": "Hello world!"}
     :param descriptions: Optional. Descriptions for any variables. Ex: {"mystring": "A basic string property."}
     :param title: Optional. The title of the schema
+    :param additional_properties: Optional. Whether or not to all additional properties.
     :param pull_descriptions: Optional. Whether or not to pull descriptions if the function ends up generating a JSON Schema from an object
     :param pull_required: Option. Whether or not to mark a property required if it isn't a Union with NoneType. Ex. str -> Not required, str | None -> Required
     :returns: The JSON Schema dict
@@ -254,7 +258,8 @@ def create_json_schema(properties: list[str],
     """
     # Prepare the base dict
     schema: dict = {
-        "type": "object"
+        "type": "object",
+        "additionalProperties": additional_properties
     }
     # If required properties are given, apply them
     if required:
@@ -269,7 +274,7 @@ def create_json_schema(properties: list[str],
         # If its type was given, apply it
         if type_hints and p in type_hints:
             # Converts the type to a valid JSON Schema type
-            schema_type: JSONSchemaType = to_json_schema_type(type_hints[p], pull_descriptions)
+            schema_type: JSONSchemaType = to_json_schema_type(type_hints[p], additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required)
             if schema_type.required and pull_required:
                 if "required" in schema and p not in schema["required"]:
                     schema["required"].append(p)
@@ -378,13 +383,16 @@ def pull_docstring_parameters(obj) -> dict:
 # Convert a function or object into a basic JSON Schema
 # Pulls descriptions from docstrings
 # function(variable: str) -> {"title": "function", "type": "object", "properties": {"variable": {"type": "string"}}}
-def generate_json_schema(obj: FunctionType | type, pull_descriptions: bool = True) -> dict | None:
+def generate_json_schema(obj: FunctionType | type, additional_properties: bool = False, pull_descriptions: bool = True, pull_required: bool = True) -> dict | None:
     """
     Convert a function or object into a JSON
     
     It can pull descriptions from docstrings using the reStructuredText (reST) format
 
     :param obj: The function or object
+    :param additional_properties: Optional. Whether or not to all additional properties.
+    :param pull_descriptions: Optional. Whether or not to pull descriptions if the function ends up generating a JSON Schema from an object
+    :param pull_required: Option. Whether or not to mark a property required if it isn't a Union with NoneType. Ex. str -> Not required, str | None -> Required
     :returns: A JSON Schema dict or None
 
     Examples:
@@ -427,7 +435,7 @@ def generate_json_schema(obj: FunctionType | type, pull_descriptions: bool = Tru
             if v.default is not inspect.Parameter.empty:
                 defaults[k] = v.default
         # Create the JSON Schema with the gathered data
-        return create_json_schema(properties=properties, type_hints=type_hints, defaults=defaults, descriptions=descriptions, title=obj.__name__, pull_descriptions=pull_descriptions, pull_required=True)
+        return create_json_schema(properties=properties, type_hints=type_hints, defaults=defaults, descriptions=descriptions, title=obj.__name__, additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required)
     
     # Generates a JSON Schema from a model
     def __get_model_json_schema__(model: type) -> dict:
@@ -461,7 +469,7 @@ def generate_json_schema(obj: FunctionType | type, pull_descriptions: bool = Tru
         # If no properties were defined, then the object given is cannot be turned into a JSON Schema
         if len(properties) == 0:
             raise InvalidInput("A JSON Schema cannot be generated from the object given")
-        return create_json_schema(properties=properties, type_hints=type_hints, defaults=defaults, descriptions=descriptions, title=obj.__name__, pull_descriptions=pull_descriptions, pull_required=True)
+        return create_json_schema(properties=properties, type_hints=type_hints, defaults=defaults, descriptions=descriptions, title=obj.__name__, additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required)
 
     schema: dict = {}
     # Check if the obj is a function
