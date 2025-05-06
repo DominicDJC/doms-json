@@ -52,7 +52,8 @@ Will generate the following JSON schema:
     "properties": {
         "my_variable": { },
         "my_second_variable": { }
-    }
+    },
+    "additionalProperties": False
 }
 ```
 
@@ -85,7 +86,8 @@ The schema will now be generate as follows:
         "my_second_variable": {
             "type": "integer"
         }
-    }
+    },
+    "additionalProperties": False
 }
 ```
 
@@ -116,7 +118,8 @@ Now it will generate with both types and defaults:
         "my_second_variable": {
             "type": "integer"
         }
-    }
+    },
+    "additionalProperties": False
 }
 ```
 
@@ -148,7 +151,8 @@ And now it will be generated with types, defaults, and descriptions:
             "type": "integer",
             "description": "The number of lines of code"
         }
-    }
+    },
+    "additionalProperties": False
 }
 ```
 
@@ -173,7 +177,8 @@ The schema will now include the requirements:
             "description": "The number of lines of code"
         }
     },
-    "required": ["my_variable"]
+    "required": ["my_variable"],
+    "additionalProperties": False
 }
 ```
 
@@ -199,7 +204,8 @@ This will add the title to the schema:
             "description": "The number of lines of code"
         }
     },
-    "required": ["my_variable"]
+    "required": ["my_variable"],
+    "additionalProperties": False
 }
 ```
 
@@ -233,7 +239,8 @@ The JSON schema for this object would be:
             "type": "integer"
         }
     },
-    "required": ["my_variable", "my_second_variable"]
+    "required": ["my_variable", "my_second_variable"],
+    "additionalProperties": False
 }
 ```
 
@@ -272,7 +279,8 @@ Notice the type given for ```int_variable```: ```int | None```. Specifying that 
             "default": "This is a string"
         }
     },
-    "required": ["str_variable"]
+    "required": ["str_variable"],
+    "additionalProperties": False
 }
 ```
 
@@ -297,7 +305,8 @@ generate_json_schema(MyClass)
             }
         }
     },
-    "required": ["names"]
+    "required": ["names"],
+    "additionalProperties": False
 }
 ```
 
@@ -328,7 +337,8 @@ When calling ```generate_json_schema(MyObject)```, we'll end up with the followi
             "description": "A simple string variable"
         }
     },
-    "required": ["my_variable"]
+    "required": ["my_variable"],
+    "additionalProperties": False
 }
 ```
 
@@ -357,7 +367,8 @@ If you already have a JSON schema and you need to add descriptions, use the ```d
         "my_number": {
             "type": "integer"
         }
-    }
+    },
+    "additionalProperties": False
 }
 ```
 

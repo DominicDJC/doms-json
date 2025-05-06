@@ -52,13 +52,14 @@ def multi_object(location: Location, my_object: MyObject, either: Location | MyO
 
 def test_doms_json():
     # Create JSON schema with no types
-    response = create_json_schema(["my_variable", "my_second_variable"])
+    response = create_json_schema(["my_variable", "my_second_variable"], additional_properties=True)
     assert response == {
         "type": "object",
         "properties": {
             "my_variable": { },
             "my_second_variable": { }
-        }
+        },
+        "additionalProperties": True
     }
     # Create JSON schema with types
     types = {
@@ -75,7 +76,8 @@ def test_doms_json():
             "my_second_variable": {
                 "type": "integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with defaults
     defaults = {
@@ -89,7 +91,8 @@ def test_doms_json():
                 "default": "Hello world!"
             },
             "my_second_variable": { }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with defaults and types
     response = create_json_schema(["my_variable", "my_second_variable"], types, defaults)
@@ -103,7 +106,8 @@ def test_doms_json():
             "my_second_variable": {
                 "type": "integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with descriptions
     descriptions = {
@@ -117,7 +121,8 @@ def test_doms_json():
             "my_second_variable": {
                 "description": "The number of lines of code"
             }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with descriptions, defaults, and types
     response = create_json_schema(["my_variable", "my_second_variable"], types, defaults, descriptions)
@@ -132,7 +137,8 @@ def test_doms_json():
                 "type": "integer",
                 "description": "The number of lines of code"
             }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with requirements
     response = create_json_schema(["my_variable", "my_second_variable"], required=["my_variable"])
@@ -142,7 +148,8 @@ def test_doms_json():
             "my_variable": { },
             "my_second_variable": { }
         },
-        "required": ["my_variable"]
+        "required": ["my_variable"],
+        "additionalProperties": False
     }
     # Create JSON schema with required, descriptions, defaults, and types
     response = create_json_schema(["my_variable", "my_second_variable"], types, defaults, descriptions, ["my_variable"])
@@ -158,7 +165,8 @@ def test_doms_json():
                 "description": "The number of lines of code"
             }
         },
-        "required": ["my_variable"]
+        "required": ["my_variable"],
+        "additionalProperties": False
     }
     # Create JSON schema with a title
     response = create_json_schema(["my_variable", "my_second_variable"], title="MySchema")
@@ -168,7 +176,8 @@ def test_doms_json():
         "properties": {
             "my_variable": { },
             "my_second_variable": { }
-        }
+        },
+        "additionalProperties": False
     }
     # Create JSON schema with a title, required, descriptions, defaults, and types
     response = create_json_schema(["my_variable", "my_second_variable"], types, defaults, descriptions, ["my_variable"], "MySchema")
@@ -185,7 +194,8 @@ def test_doms_json():
                 "description": "The number of lines of code"
             }
         },
-        "required": ["my_variable"]
+        "required": ["my_variable"],
+        "additionalProperties": False
     }
     # Create JSON schema from object
     response = generate_json_schema(MyObject)
@@ -200,7 +210,8 @@ def test_doms_json():
                 "type": "integer"
             }
         },
-        "required": ["my_variable", "my_second_variable"]
+        "required": ["my_variable", "my_second_variable"],
+        "additionalProperties": False
     }
     # Create JSON schema from function
     response = generate_json_schema(my_function)
@@ -216,7 +227,8 @@ def test_doms_json():
                 "default": "This is a string"
             }
         },
-        "required": ["str_variable"]
+        "required": ["str_variable"],
+        "additionalProperties": False
     }
     # Create JSON schema from class
     response = generate_json_schema(MyClass)
@@ -231,7 +243,8 @@ def test_doms_json():
                 }
             }
         },
-        "required": ["names"]
+        "required": ["names"],
+        "additionalProperties": False
     }
     # Create JSON schema from object with Docstrings
     response = generate_json_schema(MyObjectDocstrings)
@@ -244,7 +257,8 @@ def test_doms_json():
                 "description": "A simple string variable"
             }
         },
-        "required": ["my_variable"]
+        "required": ["my_variable"],
+        "additionalProperties": False
     }
     # Manually describe a JSON schema
     schema = {
@@ -261,7 +275,8 @@ def test_doms_json():
             "my_number": {
                 "type": "integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     descriptions = {
         "my_object": "An object",
@@ -284,7 +299,8 @@ def test_doms_json():
                 "type": "integer",
                 "description": "An integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     descriptions = {
         "my_object": {
@@ -309,7 +325,8 @@ def test_doms_json():
                 "type": "integer",
                 "description": "An integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     descriptions = {
         "my_object": {
@@ -338,7 +355,8 @@ def test_doms_json():
                 "type": "integer",
                 "description": "An integer"
             }
-        }
+        },
+        "additionalProperties": False
     }
     # Convert a type to a JSON Schema Type
     response = to_json_schema_type(str)
