@@ -1,6 +1,6 @@
 [project]
 name = "doms-json"
-version = "1.0.0"
+version = "1.0.1"
 description = "A JSON toolkit that's particularly useful for what I'm making"
 readme = "README.md"
 requires-python = ">=3.8"

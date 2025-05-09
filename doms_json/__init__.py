@@ -174,6 +174,7 @@ def mold_value(value: Any, expected_type: type):
         return value
     # Start by checking the origin of the expected type
     origin: type = get_origin(expected_type)
+    arguments: list[type] = get_args(expected_type)
     # If the expected type is a list, then each item within the value needs to be molded
     if origin == list:
         # Prepare a list of molded values
@@ -182,7 +183,7 @@ def mold_value(value: Any, expected_type: type):
         for item in value:
             # Attempt to mold the value into each type the list allows
             molded: bool = False
-            for t in get_args(expected_type):
+            for t in arguments:
                 try:
                     molded_values.append(mold_value(item, t))
                     molded = True
@@ -196,7 +197,7 @@ def mold_value(value: Any, expected_type: type):
     # If the expected type is Union...
     if origin == UnionType:
         # Attempt to mold the value into each type the Union allows
-        for t in get_args(expected_type):
+        for t in arguments:
             try:
                 return mold_value(value, t)
             except:...
@@ -552,3 +553,13 @@ def json_call(obj, json: dict, self = None):
     if self:
         molded_data["self"] = self
     return obj(**molded_data)
+
+
+def recursive_dict(obj):
+    if isinstance(obj, dict):
+        return {k: recursive_dict(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return type(obj)(recursive_dict(v) for v in obj)
+    if hasattr(obj, "__dict__"):
+        return recursive_dict(vars(obj))
+    return obj
