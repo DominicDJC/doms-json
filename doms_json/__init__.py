@@ -172,6 +172,12 @@ def mold_value(value: Any, expected_type: type):
     # If the value's type matches the expected type, no molded is needed
     if type(value) == expected_type:
         return value
+    # Allow ints to be molded into floats
+    if expected_type == float and type(value) == int:
+        return float(value)
+    # Allow floats to be molded into ints, if they don't have a decimal value
+    if expected_type == int and type(value) == float and value % 1 == 0:
+        return int(value)
     # Start by checking the origin of the expected type
     origin: type = get_origin(expected_type)
     arguments: list[type] = get_args(expected_type)
