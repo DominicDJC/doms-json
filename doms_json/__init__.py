@@ -420,6 +420,8 @@ def generate_json_schema(obj: FunctionType | type, additional_properties: bool =
         properties: list[str] = []
         # Get the type hints from the function
         type_hints: dict[str, type] = get_type_hints(func)
+        if "return" in type_hints:
+            type_hints.pop("return")
         defaults: dict[str, Any] = {}
         descriptions: dict[str] = {}
         # If pull_descriptions is true, then pull the descriptions from the functions docstring
@@ -427,6 +429,8 @@ def generate_json_schema(obj: FunctionType | type, additional_properties: bool =
             descriptions = pull_docstring_parameters(func)
         # For each parameter in the function's signature
         for k, v in inspect.signature(func).parameters.items():
+            if k == "return":
+                continue
             # Skip the parameter if it's in the ignore list
             if k in ignore:
                 continue
@@ -452,12 +456,16 @@ def generate_json_schema(obj: FunctionType | type, additional_properties: bool =
         # a second time looking at the vars. This is how it gets all the data
         # For each type hint in the model
         for k, v in get_type_hints(model).items():
+            if k == "return":
+                continue
             # Append the property to the list of properties
             properties.append(k)
             # Set the type hint for the property
             type_hints[k] = v
         # For each variable in the model
         for k, v in vars(model).items():
+            if k == "return":
+                continue
             # If its a private variable (starts with and ends with '__'), then skip it
             if k.startswith("__") and k.endswith("__"):
                 continue
@@ -545,6 +553,8 @@ def json_call(obj, json: dict, self = None):
     molded_data: dict = {}
     # Get the type hints
     type_hints: dict[str, type] = get_type_hints(func)
+    if "return" in type_hints:
+        type_hints.pop("return")
     # Mold each value
     for key, value in json.items():
         if key not in type_hints:
