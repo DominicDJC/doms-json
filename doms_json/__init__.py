@@ -504,7 +504,7 @@ def generate_json_schema(obj: FunctionType | type, additional_properties: bool =
     return schema
 
 
-
+# Call a function or initialize an object using parameters provided in a dict
 def json_call(obj, json: dict, self = None):
     """
     Call a function or initialize an object with the input json as parameters
@@ -571,11 +571,21 @@ def json_call(obj, json: dict, self = None):
     return obj(**molded_data)
 
 
+# Recursively converts an Object and all of its variables to a dict
 def recursive_dict(obj):
+    """
+    Recursively convert an Object and all of its variables to a dict or list[dict]
+
+    :param obj: The object to convert
+    """
+    # Handle dict
     if isinstance(obj, dict):
-        return {k: recursive_dict(v) for k, v in obj.items()}
+        return {key: recursive_dict(value) for key, value in obj.items()}
+    # Handle list
     if isinstance(obj, (list, tuple)):
-        return type(obj)(recursive_dict(v) for v in obj)
+        return type(obj)(recursive_dict(value) for value in obj)
+    # Handle objects that can use vars function
     if hasattr(obj, "__dict__"):
         return recursive_dict(vars(obj))
+    # Otherwise, return the obj
     return obj

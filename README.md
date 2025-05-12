@@ -511,6 +511,10 @@ data = [100, "string", 0.25, {"city": "Dallas", "state": "Texas"}]
 molded_data = mold_value(data, list[int | str | float | Location])
 ```
 
+## Misc Functions
+
+The ```recursive_dict``` function allows you to recursively convert an Object and all of its variables to a dict.
+
 # Development
 
 To contribute to this library, first checkout the code. Then create a new virtual environment:
