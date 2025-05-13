@@ -406,6 +406,27 @@ If you want to describe the propertys within an object and the object itself, yo
 }
 ```
 
+### Enum
+
+You can easily create enums of a single type using Literals
+
+```python
+my_literal: Literal["One", "Two", "Three"]
+my_second_literal: Literal[0, 1, 2]
+
+# Would convert to
+{
+    "my_literal": {
+        "type": "string",
+        "enum": ["One", "Two", "Three"]
+    },
+    "my_second_literal": {
+        "type": "integer",
+        "enum": [0, 1, 2]
+    }
+}
+```
+
 ### Convert a type to a JSON Schema Type
 
 The ```to_json_schema_type``` function can be used to convert a type, union, tuple of types, or list of types into a JSON Schema type:

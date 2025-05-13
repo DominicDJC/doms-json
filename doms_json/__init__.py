@@ -140,10 +140,13 @@ def to_json_schema_type(t: type | tuple[type] | list[type], additional_propertie
         return __many__([argument for argument in arguments])
     # Otherwise, check if it's a Literal
     if origin == Literal:
-        return JSONSchemaType({
-            "type": "string",
-            "enum": [value for value in arguments]
-        }, True)
+        arg_set: set = set([type(arg) for arg in arguments])
+        if len(arg_set) > 1:
+            raise TypeError(f"Literal should only have one type, got two: \033[31m{arg_set}\033[37m")
+        schema_type: dict = to_json_schema_type(arg_set.pop(), additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required).schema_type
+        schema_type["enum"] = [value for value in arguments]
+        # If it is, convert it to a string enum
+        return JSONSchemaType(schema_type, True)
     # Otherwise, attempt to read it as a tuple or list
     length: int | None = None
     # If it cannot use the len function, it will fail and move on
@@ -215,8 +218,20 @@ def mold_value(value: Any, expected_type: type):
             except:...
         # If the value wasn't able to be molded into any of the types the Union allows, raise an error
         raise TypeMismatch(f"Value \033[31m{value}\033[37m could not be molded into any of the expected types \033[31m{arguments}\033[37m")
+    # If the expected type is a Literal
+    if origin == Literal:
+        print("IT'S A LITERAL")
+        # Get the Literal's type
+        arg_set: set = set([type(arg) for arg in arguments])
+        # If there's more than one type, raise an error
+        if len(arg_set) > 1:
+            raise TypeMismatch(f"Literal should only have one type, got two: \033[31m{arg_set}\033[37m")
+        # If the value is not within the literal, raise an error
+        if value not in arguments:
+            raise TypeMismatch(f"Value \033[31m{value}\033[37m could not be molded into any of the expected literal values: \033[31m{arguments}\033[37m")
+        # Return the value if it matches
+        return value
     # If the value's type didn't match the expected type and the expected type isn't a list or a union, then attempt to convert to an object
-    
     if type(value) == dict:
         # Try to get the objects type hints
         type_hints: dict = get_type_hints(expected_type)

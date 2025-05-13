@@ -51,7 +51,8 @@ def multi_object(location: Location, my_object: MyObject, either: Location | MyO
         "either": vars(either)
     }
 
-def literal_function(literal_input: Literal["Value One", "Value Two", "Value Three"]):...
+def literal_function(literal_string: Literal["Value One", "Value Two", "Value Three"], literal_int: Literal[0, 1, 2]) -> str:
+    return f"{literal_string} - {literal_int}"
 
 def test_doms_json():
     # Create JSON schema with no types
@@ -439,13 +440,32 @@ def test_doms_json():
         "type": "object",
         "title": "literal_function",
         "properties": {
-            "literal_input": {
+            "literal_string": {
                 "type": "string",
                 "enum": ["Value One", "Value Two", "Value Three"]
+            },
+            "literal_int": {
+                "type": "integer",
+                "enum": [0, 1, 2]
             }
         },
-        "required": ["literal_input"],
+        "required": ["literal_string", "literal_int"],
         "additionalProperties": False
     }
     assert schema == generate_json_schema(literal_function)
-    # Test that invalid strings are blocked in a literal
+    # Test that literals process through json_calls and molding properly
+    llm_response = {
+        "literal_string": "Value One",
+        "literal_int": 2
+    }
+    response = json_call(literal_function, llm_response)
+    assert response == "Value One - 2"
+    llm_response = {
+        "literal_string": "Value Four",
+        "literal_int": 2
+    }
+    try:
+        json_call(literal_function, llm_response)
+    except Exception as e:
+        assert type(e) == TypeMismatch
+        assert f"{e}" == f"Value \033[31mValue Four\033[37m could not be molded into any of the expected literal values: \033[31m('Value One', 'Value Two', 'Value Three')\033[37m"
