@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import get_args, get_type_hints, Any, get_origin
+from typing import Literal, get_args, get_type_hints, Any, get_origin
 from types import FunctionType, NoneType, UnionType, MethodType
 import json, inspect, copy
 
@@ -138,6 +138,12 @@ def to_json_schema_type(t: type | tuple[type] | list[type], additional_propertie
     if origin == UnionType:
         # If it is, convert it to a anyOf JSON Schema type dict and return it
         return __many__([argument for argument in arguments])
+    # Otherwise, check if it's a Literal
+    if origin == Literal:
+        return JSONSchemaType({
+            "type": "string",
+            "enum": [value for value in arguments]
+        }, True)
     # Otherwise, attempt to read it as a tuple or list
     length: int | None = None
     # If it cannot use the len function, it will fail and move on

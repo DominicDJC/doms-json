@@ -1,4 +1,5 @@
 from doms_json import *
+from typing import Literal
 
 
 class MyObject:
@@ -49,6 +50,8 @@ def multi_object(location: Location, my_object: MyObject, either: Location | MyO
         "my_object": vars(my_object),
         "either": vars(either)
     }
+
+def literal_function(literal_input: Literal["Value One", "Value Two", "Value Three"]):...
 
 def test_doms_json():
     # Create JSON schema with no types
@@ -431,3 +434,18 @@ def test_doms_json():
     }
     response = json_call(multi_object, llm_response)
     assert response == llm_response
+    # Test that literals convert to string enums
+    schema = {
+        "type": "object",
+        "title": "literal_function",
+        "properties": {
+            "literal_input": {
+                "type": "string",
+                "enum": ["Value One", "Value Two", "Value Three"]
+            }
+        },
+        "required": ["literal_input"],
+        "additionalProperties": False
+    }
+    assert schema == generate_json_schema(literal_function)
+    # Test that invalid strings are blocked in a literal
