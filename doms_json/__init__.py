@@ -220,7 +220,6 @@ def mold_value(value: Any, expected_type: type):
         raise TypeMismatch(f"Value \033[31m{value}\033[37m could not be molded into any of the expected types \033[31m{arguments}\033[37m")
     # If the expected type is a Literal
     if origin == Literal:
-        print("IT'S A LITERAL")
         # Get the Literal's type
         arg_set: set = set([type(arg) for arg in arguments])
         # If there's more than one type, raise an error
