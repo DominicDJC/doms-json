@@ -1,5 +1,6 @@
 from doms_json import *
 from typing import Literal
+from enum import Enum
 
 
 class MyObject:
@@ -53,6 +54,19 @@ def multi_object(location: Location, my_object: MyObject, either: Location | MyO
 
 def literal_function(literal_string: Literal["Value One", "Value Two", "Value Three"], literal_int: Literal[0, 1, 2]) -> str:
     return f"{literal_string} - {literal_int}"
+
+class MyEnum(Enum):
+    ValueOne = "Value One"
+    ValueTwo = "Value Two"
+    ValueThree = "Value Three"
+
+class MyIntEnum(Enum):
+    Zero = 0
+    One = 1
+    Two = 2
+
+def enum_function(enum_string: MyEnum, enum_int: MyIntEnum) -> str:
+    return f"{enum_string.value} - {enum_int.value}"
 
 def test_doms_json():
     # Create JSON schema with no types
@@ -469,3 +483,37 @@ def test_doms_json():
     except Exception as e:
         assert type(e) == TypeMismatch
         assert f"{e}" == f"Value \033[31mValue Four\033[37m could not be molded into any of the expected literal values: \033[31m('Value One', 'Value Two', 'Value Three')\033[37m"
+    # Test that enums convert to string enums
+    schema = {
+        "type": "object",
+        "title": "enum_function",
+        "properties": {
+            "enum_string": {
+                "type": "string",
+                "enum": ["Value One", "Value Two", "Value Three"]
+            },
+            "enum_int": {
+                "type": "integer",
+                "enum": [0, 1, 2]
+            }
+        },
+        "required": ["enum_string", "enum_int"],
+        "additionalProperties": False
+    }
+    assert schema == generate_json_schema(enum_function)
+    # Test that enums process through json_calls and molding properly
+    llm_response = {
+        "enum_string": "Value One",
+        "enum_int": 2
+    }
+    response = json_call(enum_function, llm_response)
+    assert response == "Value One - 2"
+    llm_response = {
+        "enum_string": "Value Four",
+        "enum_int": 2
+    }
+    try:
+        json_call(enum_function, llm_response)
+    except Exception as e:
+        assert type(e) == TypeMismatch
+        assert f"{e}" == f"Value \033[31mValue Four\033[37m could not be molded into any of the expected enum values: \033[31m('Value One', 'Value Two', 'Value Three')\033[37m"

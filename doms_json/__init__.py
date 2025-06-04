@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Literal, get_args, get_type_hints, Any, get_origin
 from types import FunctionType, NoneType, UnionType, MethodType
+from enum import Enum
 import json, inspect, copy
 
 RED   = "\033[31m"
@@ -142,10 +143,19 @@ def to_json_schema_type(t: type | tuple[type] | list[type], additional_propertie
     if origin == Literal:
         arg_set: set = set([type(arg) for arg in arguments])
         if len(arg_set) > 1:
-            raise TypeError(f"Literal should only have one type, got two: \033[31m{arg_set}\033[37m")
+            raise TypeError(f"Literal should only have one type, got two: {RED}{arg_set}{WHITE}")
         schema_type: dict = to_json_schema_type(arg_set.pop(), additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required).schema_type
         schema_type["enum"] = [value for value in arguments]
         # If it is, convert it to a string enum
+        return JSONSchemaType(schema_type, True)
+    # Otherwise, check if it's an Enum
+    if inspect.isclass(t) and issubclass(t, Enum):
+        enum_values = [member.value for member in t]
+        arg_set: set = set(type(value) for value in enum_values)
+        if len(arg_set) > 1:
+            raise TypeError(f"Enum should only have one type, got two: {RED}{arg_set}{WHITE}")
+        schema_type: dict = to_json_schema_type(arg_set.pop(), additional_properties=additional_properties, pull_descriptions=pull_descriptions, pull_required=pull_required).schema_type
+        schema_type["enum"] = enum_values
         return JSONSchemaType(schema_type, True)
     # Otherwise, attempt to read it as a tuple or list
     length: int | None = None
@@ -230,6 +240,13 @@ def mold_value(value: Any, expected_type: type):
             raise TypeMismatch(f"Value \033[31m{value}\033[37m could not be molded into any of the expected literal values: \033[31m{arguments}\033[37m")
         # Return the value if it matches
         return value
+    # If the expected type is an Enum
+    if inspect.isclass(expected_type) and issubclass(expected_type, Enum):
+        try:
+            return expected_type(value)
+        except Exception:
+            enum_values = tuple(member.value for member in expected_type)
+            raise TypeMismatch(f"Value {RED}{value}{WHITE} could not be molded into any of the expected enum values: {RED}{enum_values}{WHITE}")
     # If the value's type didn't match the expected type and the expected type isn't a list or a union, then attempt to convert to an object
     if type(value) == dict:
         # Try to get the objects type hints
