@@ -427,6 +427,27 @@ my_second_literal: Literal[0, 1, 2]
 }
 ```
 
+Python's `Enum` classes are also supported:
+
+```python
+from enum import Enum
+
+class MyEnum(Enum):
+    One = "One"
+    Two = "Two"
+    Three = "Three"
+
+my_enum: MyEnum
+
+# Would convert to
+{
+    "my_enum": {
+        "type": "string",
+        "enum": ["One", "Two", "Three"]
+    }
+}
+```
+
 ### Convert a type to a JSON Schema Type
 
 The ```to_json_schema_type``` function can be used to convert a type, union, tuple of types, or list of types into a JSON Schema type:
