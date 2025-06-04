@@ -412,7 +412,7 @@ def pull_docstring_parameters(obj) -> dict:
 # function(variable: str) -> {"title": "function", "type": "object", "properties": {"variable": {"type": "string"}}}
 def generate_json_schema(obj: FunctionType | type, additional_properties: bool = False, pull_descriptions: bool = True, pull_required: bool = True) -> dict | None:
     """
-    Convert a function or object into a JSON
+    Convert a function or object into a JSON Schema
     
     It can pull descriptions from docstrings using the reStructuredText (reST) format
 
@@ -500,7 +500,6 @@ def generate_json_schema(obj: FunctionType | type, additional_properties: bool =
             # If the variable isn't in the list of properties yet, append it
             if k not in properties:
                 properties.append(k)
-            properties.append(k)
         # If no properties were defined, then the object given is cannot be turned into a JSON Schema
         if len(properties) == 0:
             raise InvalidInput("A JSON Schema cannot be generated from the object given")

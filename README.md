@@ -527,7 +527,7 @@ It works with many different types, with support for **Unions** and typed **List
 ```python
 data = [100, "string", 0.25, {"city": "Dallas", "state": "Texas"}]
 
-# The 100, "string", and 0.25 will be uneffected, while the 
+# The 100, "string", and 0.25 will be unaffected, while the 
 # location data will be converted to a Location object
 molded_data = mold_value(data, list[int | str | float | Location])
 ```
